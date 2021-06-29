@@ -116,7 +116,12 @@ public class XLSXReader
                     stageId++;
                 }
                 if(isCasRequested && isProdRegistered && !isUrlMigrated) {
-                    service.setServiceId("^http(s)?://(www\\.|){1}"+serviceUrl+"\\/?.*");
+                    if(colorCode == 1)
+                        service.setServiceId("^http(s)?://(www\\.|){1}"+serviceUrl+"\\/?.*");
+                    if(colorCode == 2)
+                        service.setServiceId("https://(www\\.|){1}"+serviceUrl+"\\/?.*");
+                    if(colorCode == 3)
+                        service.setServiceId("http://(www\\.|){1}"+serviceUrl+"\\/?.*");
                     service.setEnabled(isCasRequested);
                     service.setId(prodId);
                     service.setDescription("Primary IU Website");
