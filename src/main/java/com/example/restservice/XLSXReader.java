@@ -38,7 +38,9 @@ public class XLSXReader
                 boolean isProdRegistered = false;
                 boolean isStageRegistered = false;
                 boolean isCasRequested = false;
+                boolean isUrlMigrated = false;
                 String serviceUrl = "";
+                int colorCode = 1;
                 Row row = itr.next();
                 Iterator<Cell> cellIterator = row.cellIterator();   //iterating over each column
                 while (cellIterator.hasNext())
@@ -56,14 +58,14 @@ public class XLSXReader
                             if(url.endsWith("/*")){
                                 url = url.substring(0,url.lastIndexOf("/*"));
                             }
+                            if(url.contains("-*.") || url.contains("-%.")){
+                                url = url.replace("-*.","-([A-Za-z0-9_-]+)*");
+                                url = url.replace("-%.","-([A-Za-z0-9_-]+)*");
+                            }
                             url = url.replaceAll("[.]","\\\\.");
                             url = url.replaceAll("/","\\\\/");
                             if(url.startsWith("*\\.")){
-                                url = url.replace("*.","([A-Za-z0-9]+?(.|-|_){1}|)*");
-                            }
-                            if(url.contains("*.") || url.contains("*.")){
-                                url = url.replace("*.","([A-Za-z0-9_-]+)*");
-                                url = url.replace("%.","([A-Za-z0-9_-]+)*");
+                                url = url.replace("*\\.","([A-Za-z0-9]+?(.|-|_){1}|)*");
                             }
                             serviceUrl = serviceUrl+url;
                             break;
@@ -85,11 +87,26 @@ public class XLSXReader
                                 isProdRegistered = true;
                             System.out.print(isProdRegistered + "\t\t\t");
                             break;
+                        case 4:    //field that represents number cell type
+                            String migrated = cell.getStringCellValue();
+                            if(migrated != null && !migrated.isEmpty())
+                                isUrlMigrated = true;
+                            System.out.print(isProdRegistered + "\t\t\t");
+                            break;
+                        case 5:    //field that represents number cell type
+                            colorCode = (int) cell.getNumericCellValue();
+                            System.out.print(isProdRegistered + "\t\t\t");
+                            break;
                         default:
                     }
                 }
-                if(isCasRequested && isStageRegistered) {
+                if(isCasRequested && isStageRegistered && !isUrlMigrated) {
+                    if(colorCode == 1)
                     service.setServiceId("^http(s)?://(www\\.|){1}"+serviceUrl+"\\/?.*");
+                    if(colorCode == 2)
+                    service.setServiceId("https://(www\\.|){1}"+serviceUrl+"\\/?.*");
+                    if(colorCode == 3)
+                    service.setServiceId("http://(www\\.|){1}"+serviceUrl+"\\/?.*");
                     service.setEnabled(isCasRequested);
                     service.setId(stageId);
                     service.setDescription("Primary IU Website");
@@ -98,7 +115,7 @@ public class XLSXReader
                     stageValues.add(service);
                     stageId++;
                 }
-                if(isCasRequested && isProdRegistered) {
+                if(isCasRequested && isProdRegistered && !isUrlMigrated) {
                     service.setServiceId("^http(s)?://(www\\.|){1}"+serviceUrl+"\\/?.*");
                     service.setEnabled(isCasRequested);
                     service.setId(prodId);
